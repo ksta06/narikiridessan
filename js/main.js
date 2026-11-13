@@ -479,7 +479,7 @@ async function handleFile(file) {
 
   const note = resizeNote(prepared.width, prepared.height);
   if (note) setFileMessage(note, 'warn');
-  else setFileMessage('じゅんびOK！「{AI|エーアイ}に{点|てん}をつけてもらう」をおしてね。');
+  else setFileMessage('じゅんびOK！「{点|てん}をつけてもらう」をおしてね。');
 }
 
 // ===== 自分でお題を作る（保存したお題は、すぐに「みんなの絵」に出る。運営がチェックを外すと消える） =====
@@ -569,7 +569,7 @@ $('#btn-create-save').addEventListener('click', async () => {
 
 // ===== 採点 =====
 const LOADING_TEXTS = [
-  '{AI|エーアイ}が{点|てん}をつけているよ…',
+  '{点|てん}をつけているよ…',
   '{形|かたち}をくらべているよ…',
   '{色|いろ}を{見|み}ているよ…',
   '{細|こま}かいところを{見|み}ているよ…',

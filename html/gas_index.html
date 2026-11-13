@@ -3,13 +3,13 @@
 <head>
   <base target="_top">
   <meta charset="utf-8">
-  <title>AI画像比較・採点ゲーム</title>
+  <title>画像比較・採点ゲーム</title>
   <?!= include('style'); ?>
 </head>
 <body>
   <header>
-    <h1><img class="title-icon" src="https://lh3.googleusercontent.com/d/1BKHVxV_y_z5_xr40MRSBNJFg0azyWFDE" alt="AI画像比較・採点ゲーム" draggable="false"></h1>
-    <p><ruby>Photoshop<rt>フォトショップ</rt></ruby>でおだいと<ruby>同<rt>おな</rt></ruby>じ<ruby>絵<rt>え</rt></ruby>をかいて、<ruby>AI<rt>エーアイ</rt></ruby>に<ruby>点<rt>てん</rt></ruby>をつけてもらおう！</p>
+    <h1><img class="title-icon" src="https://lh3.googleusercontent.com/d/1BKHVxV_y_z5_xr40MRSBNJFg0azyWFDE" alt="画像比較・採点ゲーム" draggable="false"></h1>
+    <p><ruby>Photoshop<rt>フォトショップ</rt></ruby>でおだいと<ruby>同<rt>おな</rt></ruby>じ<ruby>絵<rt>え</rt></ruby>をかいて、<ruby>点<rt>てん</rt></ruby>をつけてもらおう！</p>
   </header>
 
   <main>
@@ -68,7 +68,7 @@
     <section id="screen-select" class="hidden">
       <div class="card">
         <h2>おだいをえらぼう</h2>
-        <p class="muted"><ruby>Photoshop<rt>フォトショップ</rt></ruby>でかきたいおだいを、クリックしてね。<ruby>AI<rt>エーアイ</rt></ruby>が、どれだけそっくりかを<ruby>見<rt>み</rt></ruby>て、100<ruby>点<rt>てん</rt></ruby>まんてんで<ruby>点<rt>てん</rt></ruby>をつけるよ。</p>
+        <p class="muted"><ruby>Photoshop<rt>フォトショップ</rt></ruby>でかきたいおだいを、クリックしてね。どれだけそっくりかを<ruby>見<rt>み</rt></ruby>て、100<ruby>点<rt>てん</rt></ruby>まんてんで<ruby>点<rt>てん</rt></ruby>をつけるよ。</p>
         <div id="topic-grid" class="topic-grid"></div>
         <p id="topic-empty" class="muted hidden"><ruby>絵<rt>え</rt></ruby>がありません</p>
         <div id="select-message" class="message error"></div>
@@ -95,7 +95,7 @@
             <li><ruby>Photoshop<rt>フォトショップ</rt></ruby>で、おだいとできるだけ<ruby>同<rt>おな</rt></ruby>じ<ruby>絵<rt>え</rt></ruby>をかこう</li>
             <li><ruby>PNG<rt>ピーエヌジー</rt></ruby>で<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>そう</li>
             <li>このがめんにもどって、<ruby>絵<rt>え</rt></ruby>を<ruby>出<rt>だ</rt></ruby>そう</li>
-            <li><ruby>AI<rt>エーアイ</rt></ruby>が100<ruby>点<rt>てん</rt></ruby>まんてんで<ruby>点<rt>てん</rt></ruby>をつけてくれるよ！</li>
+            <li>100<ruby>点<rt>てん</rt></ruby>まんてんで<ruby>点<rt>てん</rt></ruby>がつくよ！</li>
           </ol>
           <div class="tips">
             <b><ruby>Photoshop<rt>フォトショップ</rt></ruby>での<ruby>作<rt>つく</rt></ruby>りかた</b>
@@ -143,7 +143,7 @@
         </div>
         <div class="actions">
           <button class="btn-secondary hidden" id="btn-change"><ruby>絵<rt>え</rt></ruby>をえらびなおす</button>
-          <button class="btn-primary" id="btn-score" disabled><ruby>AI<rt>エーアイ</rt></ruby>に<ruby>点<rt>てん</rt></ruby>をつけてもらう</button>
+          <button class="btn-primary" id="btn-score" disabled><ruby>点<rt>てん</rt></ruby>をつけてもらう</button>
         </div>
         <p class="muted" style="text-align:center;font-size:12px;margin:12px 0 0">
           <button class="btn-secondary" style="padding:4px 14px;font-size:12px" data-go="start">あそびかたにもどる</button>
@@ -154,7 +154,7 @@
     <!-- 採点中 -->
     <section id="screen-loading" class="card loading hidden">
       <div class="spinner"></div>
-      <h2 id="loading-text"><ruby>AI<rt>エーアイ</rt></ruby>が<ruby>点<rt>てん</rt></ruby>をつけているよ…</h2>
+      <h2 id="loading-text"><ruby>点<rt>てん</rt></ruby>をつけているよ…</h2>
       <p class="muted">10〜30びょうくらいまってね（<span id="loading-sec">0</span>びょうたったよ）</p>
     </section>
     <!-- 採点エラー -->
@@ -270,7 +270,7 @@
         <li>「お<ruby>絵<rt>え</rt></ruby>かきモード」か「ぬりえモード」をえらぶ</li>
         <li><ruby>Photoshop<rt>フォトショップ</rt></ruby>で、おだいとそっくりな<ruby>絵<rt>え</rt></ruby>をかく</li>
         <li><ruby>PNG<rt>ピーエヌジー</rt></ruby>で<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>して、「<ruby>絵<rt>え</rt></ruby>を<ruby>出<rt>だ</rt></ruby>す」から<ruby>出<rt>だ</rt></ruby>す</li>
-        <li><ruby>AI<rt>エーアイ</rt></ruby>が100<ruby>点<rt>てん</rt></ruby>まんてんで、<ruby>点<rt>てん</rt></ruby>をつけてくれるよ！</li>
+        <li>100<ruby>点<rt>てん</rt></ruby>まんてんで、<ruby>点<rt>てん</rt></ruby>がつくよ！</li>
       </ol>
 
       <h3>■ <ruby>絵<rt>え</rt></ruby>をえらぶ</h3>
@@ -305,7 +305,7 @@
         <li>「<ruby>絵<rt>え</rt></ruby>を<ruby>出<rt>だ</rt></ruby>す」をおして、<ruby>PNG<rt>ピーエヌジー</rt></ruby>の<ruby>絵<rt>え</rt></ruby>をえらぼう。ひっぱって<ruby>入<rt>い</rt></ruby>れてもいいよ。</li>
         <li><ruby>出<rt>だ</rt></ruby>せるのは、<ruby>PNG<rt>ピーエヌジー</rt></ruby>の<ruby>絵<rt>え</rt></ruby>だけだよ。<ruby>大<rt>おお</rt></ruby>きさは5MBまで。</li>
         <li>おだいの<ruby>絵<rt>え</rt></ruby>をクリックすると、<ruby>大<rt>おお</rt></ruby>きく<ruby>見<rt>み</rt></ruby>られるよ。</li>
-        <li>「<ruby>AI<rt>エーアイ</rt></ruby>に<ruby>点<rt>てん</rt></ruby>をつけてもらう」をおすと、<ruby>点<rt>てん</rt></ruby>がつくよ。</li>
+        <li>「<ruby>点<rt>てん</rt></ruby>をつけてもらう」をおすと、<ruby>点<rt>てん</rt></ruby>がつくよ。</li>
       </ul>
 
       <h3>■ <ruby>点<rt>てん</rt></ruby>のつけかた</h3>

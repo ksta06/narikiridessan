@@ -59,7 +59,7 @@ const CRITERIA = [
 // GAS では index・style・script の 3 ファイルに分け、index から style と script を読み込む
 function doGet() {
   return HtmlService.createTemplateFromFile('index').evaluate()
-    .setTitle('AI画像比較・採点ゲーム')
+    .setTitle('画像比較・採点ゲーム')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
@@ -152,23 +152,31 @@ function submitUserTopic(passphrase, title, imageDataUrl) {
   if (base64.length * 3 / 4 > 5 * 1024 * 1024) return fail_('INVALID', '画像のサイズが大きすぎます（上限 5MB）。');
 
   try {
-    const folderId = PropertiesService.getScriptProperties().getProperty('USER_FOLDER_ID');
-    const sheet = getSpreadsheet_().getSheetByName(SHEET_USER_TOPICS);
-    if (!folderId || !sheet) throw new Error('「みんなの絵」の準備ができていません。エディタで setup() を実行してください');
-
-    const now = new Date();
-    const fileName = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMdd-HHmmss') + '_' + name + '.png';
-    const blob = Utilities.newBlob(Utilities.base64Decode(base64), 'image/png', fileName);
-    const file = DriveApp.getFolderById(folderId).createFile(blob);
-
-    // 保存した時点で「使う」にチェックを入れて公開する（不適切なものは運営がチェックを外す）
-    sheet.appendRow([now, file.getId(), name, true]);
-    sheet.getRange(sheet.getLastRow(), 4).insertCheckboxes();
+    saveUserTopic_(name, base64);
     return { ok: true };
   } catch (e) {
     console.error(e);
     return fail_('CONFIG', 'お題を保存できませんでした。運営スタッフに声をかけてください。');
   }
+}
+
+/**
+ * 画像をドライブの「みんなの絵」フォルダに保存し、「みんなの絵」シートに行を足す。
+ * 「使う」は保存した時点でチェックを入れて公開する（不適切なものは運営がチェックを外す）。
+ * 準備ができていないときや保存に失敗したときは例外を投げる。
+ */
+function saveUserTopic_(name, base64) {
+  const folderId = PropertiesService.getScriptProperties().getProperty('USER_FOLDER_ID');
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_USER_TOPICS);
+  if (!folderId || !sheet) throw new Error('「みんなの絵」の準備ができていません。エディタで setup() を実行してください');
+
+  const now = new Date();
+  const fileName = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMdd-HHmmss') + '_' + name + '.png';
+  const blob = Utilities.newBlob(Utilities.base64Decode(base64), 'image/png', fileName);
+  const file = DriveApp.getFolderById(folderId).createFile(blob);
+
+  sheet.appendRow([now, file.getId(), name, true]);
+  sheet.getRange(sheet.getLastRow(), 4).insertCheckboxes();
 }
 
 /**
@@ -222,6 +230,12 @@ function scoreImage(passphrase, topicId, imageDataUrl) {
       response.usage.input_tokens || '', response.usage.output_tokens || '',
       seconds.toFixed(1), count, '',
     ]);
+    // 採点できた絵は、お題と同じタイトルで「みんなの絵」に保存する（失敗しても採点結果はそのまま返す）
+    try {
+      saveUserTopic_(topic.title, base64);
+    } catch (saveError) {
+      console.error(saveError);
+    }
     return { ok: true, result: result, remaining: Math.max(0, settings.limit - count) };
   } catch (e) {
     const seconds = (Date.now() - started) / 1000;
@@ -230,7 +244,7 @@ function scoreImage(passphrase, topicId, imageDataUrl) {
       seconds.toFixed(1), count, String(e.message).slice(0, 500),
     ]);
     console.error(e);
-    return fail_('AI', 'AIの採点でエラーが発生しました。もう一度お試しください。');
+    return fail_('AI', '採点でエラーが発生しました。もう一度お試しください。');
   }
 }
 
@@ -260,7 +274,7 @@ const SYSTEM_PROMPT = [
   '- コメントは小学校 1・2 年生が読める、やさしい日本語で書く。むずかしい言葉は使わない。',
   '- 漢字は小学校 1・2 年生で習う漢字だけを使い、それ以外の言葉はひらがなかカタカナで書く。',
   '- 漢字には必ずふりがなを付け、{漢字|よみがな} の形で書く。例：{絵|え}、{色|いろ}、{上手|じょうず}、{形|かたち}',
-  '- 英語の言葉は使わない。',
+  '- 英語の言葉は使わない。「AI」という言葉も使わない。',
   '- good_points: 似ている部分を具体的に 1〜3 文で書く。',
   '- improvements: 違う部分と、どう直せばもっと似るかを具体的に 1〜3 文で書く。',
   '- overall: 作品全体への前向きな一言（1〜2 文）。',

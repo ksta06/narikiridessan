@@ -58,7 +58,7 @@
     scoreImage: () => {
       if (window.mockFailNext) {
         window.mockFailNext = false;
-        return { ok: false, code: 'AI', message: 'AIの採点でエラーが発生しました。もう一度お試しください。' };
+        return { ok: false, code: 'AI', message: '採点でエラーが発生しました。もう一度お試しください。' };
       }
       return {
         ok: true,
