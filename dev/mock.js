@@ -40,7 +40,7 @@
       topics: TOPICS.map((t, i) => ({
         id: t.id, title: t.title, difficulty: 'かんたん', hasLineArt: i < 2, thumbnailUrl: render(t, 220),
       })),
-      // 承認済みのみんなの絵（確認用に 1 つ）
+      // 「使う」にチェックが入ったみんなの絵（確認用に 1 つ）
       userTopics: [{ id: 'dummy-3', title: 'みんなの絵（ダミー）', hasLineArt: false, thumbnailUrl: render(TOPICS[2], 220) }],
     }),
     // 自分で作ったお題の保存（プレビューでは保存せず、成功だけを返す）

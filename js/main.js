@@ -16,7 +16,7 @@ const CATEGORIES = [
 const state = {
   passphrase: '',
   topics: [],            // 選べるお題の一覧
-  userTopics: [],        // 運営が承認したみんなの絵の一覧
+  userTopics: [],        // 「使う」にチェックが入ったみんなの絵の一覧
   newTopic: null,        // 自分でお題を作る画面で選んだ絵（PNG の data URL）
   selectedTopic: null,   // 「絵を選ぶ」で選んだお題（未選択なら null）
   pendingTopic: null,    // モード選択中のお題
@@ -167,7 +167,7 @@ $$('[data-difficulty]').forEach((el) => el.addEventListener('click', () => {
   renderTopicList(state.topics.filter((t) => t.difficulty === difficulty));
   show('select');
 }));
-// みんなの絵（難易度は付けず、運営が承認したものだけを出す）
+// みんなの絵（難易度は付けず、「使う」にチェックが入ったものだけを出す）
 $('#btn-user-topics').addEventListener('click', () => {
   $('#select-message').textContent = '';
   renderTopicList(state.userTopics);
@@ -265,6 +265,39 @@ async function startTopic(topic) {
 }
 
 // ===== ぬりえモードの線画をダウンロードする =====
+
+// 線画の白い背景を透明にして、PNG の Blob を返す。
+// 白は透明、黒い線はそのまま、線のふちの灰色は半透明になる。線の色（茶色など）は保つ。
+function makeTransparentLineArt(lineArt) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const px = data.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i], g = px[i + 1], b = px[i + 2], a = px[i + 3];
+        // 白からどれだけ離れているか（0 = 白、1 = いちばん濃い）
+        const ink = Math.max(255 - r, 255 - g, 255 - b) / 255;
+        if (ink === 0) { px[i + 3] = 0; continue; }
+        // 白の上に置いたときに元と同じ見た目になる色に戻す
+        px[i] = Math.round(255 - (255 - r) / ink);
+        px[i + 1] = Math.round(255 - (255 - g) / ink);
+        px[i + 2] = Math.round(255 - (255 - b) / ink);
+        px[i + 3] = Math.round(ink * a);
+      }
+      ctx.putImageData(data, 0, 0);
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('線画を作れませんでした。'))), 'image/png');
+    };
+    img.onerror = () => reject(new Error('線画を読み込めませんでした。'));
+    img.src = 'data:' + lineArt.mimeType + ';base64,' + lineArt.base64;
+  });
+}
+
 $('#btn-lineart').addEventListener('click', async () => {
   const button = $('#btn-lineart');
   button.disabled = true;
@@ -280,8 +313,8 @@ $('#btn-lineart').addEventListener('click', async () => {
       lineArt = { mimeType: res.mimeType, base64: res.base64 };
       state.lineArtCache.set(state.topicId, lineArt);
     }
-    const bytes = Uint8Array.from(atob(lineArt.base64), (c) => c.charCodeAt(0));
-    const url = URL.createObjectURL(new Blob([bytes], { type: lineArt.mimeType }));
+    const blob = await makeTransparentLineArt(lineArt);
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = state.topicTitle + '_線画.png';
@@ -449,7 +482,7 @@ async function handleFile(file) {
   else setFileMessage('じゅんびOK！「{AI|エーアイ}に{点|てん}をつけてもらう」をおしてね。');
 }
 
-// ===== 自分でお題を作る（保存したお題は、運営が承認すると「みんなの絵」に出る） =====
+// ===== 自分でお題を作る（保存したお題は、すぐに「みんなの絵」に出る。運営がチェックを外すと消える） =====
 const USER_TITLE_MAX = 20;        // タイトルの最大文字数（Code.gs の同名の設定と合わせる）
 const CREATED_RETURN_MS = 5000;   // 保存したあと、自動でメニューに戻るまでの時間
 const createInput = $('#create-file');

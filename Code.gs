@@ -11,7 +11,7 @@
  *
  * OpenAI の API キーは n8n 側で管理する。
  * お題は「お題一覧」シート、上限回数・モデルなどは「設定」シートで変更する。
- * 子どもが作ったお題は「みんなの絵」シートに追加され、運営が「使う」にチェックを入れると一覧に出る（承認制）。
+ * 子どもが作ったお題は「みんなの絵」シートに「使う」にチェックが入った状態で追加され、一覧に出る（運営がチェックを外すと非公開）。
  */
 
 // 運営用の合言葉を使うか（開発中は false。有効にするときは js/main.js の同名の設定も true にする）
@@ -22,7 +22,7 @@ const SHEET_TOPICS = 'お題一覧';
 const SHEET_LOG = '採点ログ';
 const SHEET_USER_TOPICS = 'みんなの絵';
 
-// みんなの絵シートの見出し（「使う」は運営がチェックを入れるまで空 = 承認制）
+// みんなの絵シートの見出し（「使う」は保存時にチェック済み。運営が外すと非公開）
 const USER_TOPIC_HEADERS = ['日時', 'ファイルID', 'タイトル', '使う'];
 const USER_TITLE_MAX = 20; // タイトルの最大文字数（js/main.js の同名の設定と合わせる）
 
@@ -94,7 +94,7 @@ function getGameInfo(passphrase) {
           thumbnailUrl: loadThumbnail_(t.id),
         };
       }),
-      // 運営が承認したみんなの絵（難易度・線画なし）
+      // 「使う」にチェックが入ったみんなの絵（難易度・線画なし）
       userTopics: getUserTopics_().map(function (t) {
         return { id: t.id, title: t.title, hasLineArt: false, thumbnailUrl: loadThumbnail_(t.id) };
       }),
@@ -134,7 +134,7 @@ function getLineArt(passphrase, topicId) {
 }
 
 /**
- * 子どもが作ったお題を「みんなの絵」として保存する（運営が承認するまで一覧には出ない）。
+ * 子どもが作ったお題を「みんなの絵」として保存する（保存した時点で一覧に出る）。
  * @param {string} passphrase 運営用の合言葉
  * @param {string} title お題のタイトル（1〜USER_TITLE_MAX 文字）
  * @param {string} imageDataUrl ブラウザで 1024x1024・白背景に整えた PNG の data URL
@@ -161,7 +161,8 @@ function submitUserTopic(passphrase, title, imageDataUrl) {
     const blob = Utilities.newBlob(Utilities.base64Decode(base64), 'image/png', fileName);
     const file = DriveApp.getFolderById(folderId).createFile(blob);
 
-    sheet.appendRow([now, file.getId(), name, false]);
+    // 保存した時点で「使う」にチェックを入れて公開する（不適切なものは運営がチェックを外す）
+    sheet.appendRow([now, file.getId(), name, true]);
     sheet.getRange(sheet.getLastRow(), 4).insertCheckboxes();
     return { ok: true };
   } catch (e) {
@@ -425,7 +426,7 @@ function getUserTopics_() {
     .map(function (t) { return { id: t.id, title: t.title || 'みんなの絵' }; });
 }
 
-/** お題一覧と承認済みのみんなの絵にあるお題だけを返す（一覧にないファイルIDは読み込ませない） */
+/** お題一覧と、「使う」にチェックが入ったみんなの絵にあるお題だけを返す（一覧にないファイルIDは読み込ませない） */
 function findTopic_(topicId) {
   const topic = getTopics_().concat(getUserTopics_()).find(function (t) { return t.id === topicId; });
   if (!topic) throw new Error('このお題は選べません。お題を選び直してください');
