@@ -1,0 +1,12 @@
+<!-- メニュー画面 -->
+<section id="screen-menu" class="card menu hidden">
+  <button class="btn-primary" id="btn-game-start">ゲームスタート</button>
+  <button class="btn-secondary" data-go="difficulty"><ruby>絵<rt>え</rt></ruby>をえらぶ</button>
+  <div class="muted menu-selected">えらんでいる<ruby>絵<rt>え</rt></ruby>：<span id="menu-selected"></span></div>
+  <button class="btn-secondary" data-popup="howto">あそびかた</button>
+  <button class="btn-secondary" id="btn-create"><ruby>自分<rt>じぶん</rt></ruby>でおだいを<ruby>作<rt>つく</rt></ruby>る</button>
+  <!-- 選べる絵が右から左へ流れる（見せるだけ） -->
+  <div class="marquee">
+    <div id="topic-marquee" class="marquee-track"></div>
+  </div>
+</section>

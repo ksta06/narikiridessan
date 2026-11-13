@@ -1,0 +1,37 @@
+<!-- 6.1 ゲーム開始画面（選んだお題と作り方） -->
+<section id="screen-start" class="hidden">
+  <div class="card grid-2">
+    <div>
+      <div class="label">おだい：<span class="topic-title"></span></div>
+      <div class="frame clickable" data-zoom>
+        <img class="topic-img" alt="お題画像" draggable="false">
+        <span class="zoom-hint">クリックで<ruby>大<rt>おお</rt></ruby>きくなるよ</span>
+      </div>
+    </div>
+    <div>
+      <h2>あそびかた</h2>
+      <ol class="steps">
+        <li><ruby>左<rt>ひだり</rt></ruby>のおだいの<ruby>絵<rt>え</rt></ruby>を、よく<ruby>見<rt>み</rt></ruby>よう（クリックすると<ruby>大<rt>おお</rt></ruby>きくなるよ）</li>
+        <li><ruby>Photoshop<rt>フォトショップ</rt></ruby>で、おだいとできるだけ<ruby>同<rt>おな</rt></ruby>じ<ruby>絵<rt>え</rt></ruby>をかこう</li>
+        <li><ruby>PNG<rt>ピーエヌジー</rt></ruby>で<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>そう</li>
+        <li>このがめんにもどって、<ruby>絵<rt>え</rt></ruby>を<ruby>出<rt>だ</rt></ruby>そう</li>
+        <li><ruby>AI<rt>エーアイ</rt></ruby>が100<ruby>点<rt>てん</rt></ruby>まんてんで<ruby>点<rt>てん</rt></ruby>をつけてくれるよ！</li>
+      </ol>
+      <div class="tips">
+        <b><ruby>Photoshop<rt>フォトショップ</rt></ruby>での<ruby>作<rt>つく</rt></ruby>りかた</b>
+        <ul>
+          <li>「ファイル → <ruby>新規<rt>しんき</rt></ruby>」をおして、<b>よこ 1024 × たて 1024 ピクセル</b>、うしろの<ruby>色<rt>いろ</rt></ruby>を<b><ruby>白<rt>しろ</rt></ruby></b>にして<ruby>作<rt>つく</rt></ruby>ろう</li>
+          <li>できたら「ファイル → <ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>し → <ruby>PNG<rt>ピーエヌジー</rt></ruby>としてクイック<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>し」をおそう</li>
+          <li><ruby>形<rt>かたち</rt></ruby>・<ruby>色<rt>いろ</rt></ruby>・ばしょ・<ruby>細<rt>こま</rt></ruby>かいところを<ruby>見<rt>み</rt></ruby>て、<ruby>点<rt>てん</rt></ruby>をつけるよ</li>
+        </ul>
+      </div>
+      <div class="actions" style="justify-content:flex-start">
+        <!-- ぬりえモードのときだけ表示する -->
+        <button class="btn-secondary hidden" id="btn-lineart"><ruby>線<rt>せん</rt></ruby>の<ruby>絵<rt>え</rt></ruby>をダウンロード</button>
+        <button class="btn-primary" data-go="submit"><ruby>絵<rt>え</rt></ruby>を<ruby>出<rt>だ</rt></ruby>す</button>
+        <button class="btn-secondary" data-menu>メニューにもどる</button>
+      </div>
+      <div id="lineart-message" class="message error"></div>
+    </div>
+  </div>
+</section>

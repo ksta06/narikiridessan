@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>AI画像比較・採点ゲーム</title>
+  <style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #687082;
+    --line: #e3e0d8;
+    --accent: #e8553e;
+    --accent-ink: #ffffff;
+    --accent-soft: #fdebe7;
+    --good: #2f9e6e;
+    --warn: #c98a00;
+    --error: #c8372d;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+    line-height: 1.7;
+  }
+  header {
+    padding: 20px 16px 8px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+    font-size: clamp(22px, 4vw, 34px);
+    letter-spacing: .04em;
+  }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  main {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 12px 16px 48px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  h2 { margin: 0 0 12px; font-size: 20px; }
+  h3 { margin: 0 0 8px; font-size: 16px; }
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .card { padding: 18px; }
+  }
+
+  /* お題・プレビュー画像 */
+  .frame {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .frame .zoom-hint {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    background: rgba(31, 36, 48, .75);
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+  .frame.clickable { cursor: zoom-in; }
+  .label { font-weight: bold; margin-bottom: 6px; }
+
+  /* ボタン */
+  button {
+    font: inherit;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 28px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); font-size: 18px; }
+  .btn-primary:hover { filter: brightness(1.05); }
+  .btn-primary:disabled { background: #cfcac0; cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn-secondary:hover { background: #f0ede6; }
+  .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+
+  /* メニュー */
+  .menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 24px;
+  }
+  .menu button { width: 100%; max-width: 320px; font-size: 18px; }
+
+  /* ポップアップ */
+  .popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 22, 28, .6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 5;
+  }
+  .popup-box {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  /* お題選択 */
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .topic-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    text-align: left;
+    font-weight: normal;
+    color: var(--ink);
+  }
+  .topic-card:hover { border-color: var(--accent); }
+  .topic-card .thumb {
+    aspect-ratio: 1 / 1;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: var(--muted);
+  }
+  .topic-card .thumb img { width: 100%; height: 100%; object-fit: contain; }
+  .topic-card .title { font-weight: bold; }
+  @media (max-width: 480px) {
+    .topic-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  }
+
+  /* 説明 */
+  ol.steps { padding-left: 1.4em; margin: 0; }
+  ol.steps li { margin-bottom: 6px; }
+  .tips {
+    background: var(--accent-soft);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+  .tips ul { margin: 4px 0 0; padding-left: 1.2em; }
+
+  /* アップロード */
+  .dropzone {
+    border: 2px dashed #cfcac0;
+    border-radius: 10px;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    padding: 16px;
+    cursor: pointer;
+    color: var(--muted);
+    background: #fbfaf7;
+  }
+  .dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+  .dropzone .big { font-size: 40px; line-height: 1; }
+  .message { margin-top: 12px; font-size: 14px; }
+  .message.error { color: var(--error); font-weight: bold; }
+  .message.warn { color: var(--warn); }
+
+  /* 採点中 */
+  .loading { text-align: center; padding: 48px 24px; }
+  .spinner {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    border: 6px solid var(--accent-soft);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 結果 */
+  .total { text-align: center; }
+  .total .score { font-size: clamp(64px, 14vw, 112px); font-weight: bold; line-height: 1; color: var(--accent); }
+  .total .unit { font-size: 24px; margin-left: 4px; color: var(--muted); }
+  .total .rank { font-size: 20px; font-weight: bold; margin-top: 8px; }
+  .bars { margin-top: 24px; }
+  .bar-row { display: grid; grid-template-columns: 9em 1fr 4.5em; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .bar { height: 14px; background: #eeebe4; border-radius: 999px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width 1s ease-out; }
+  .bar-row .pts { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 480px) {
+    .bar-row { grid-template-columns: 1fr 4em; }
+    .bar-row .bar { grid-column: 1 / -1; grid-row: 2; }
+  }
+  .comment { border-left: 4px solid var(--line); padding: 4px 0 4px 14px; margin-top: 16px; }
+  .comment.good { border-color: var(--good); }
+  .comment.improve { border-color: var(--warn); }
+  .comment.overall { border-color: var(--accent); }
+  .comment p { margin: 0; white-space: pre-wrap; }
+  .thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .thumbs .frame { border-radius: 8px; }
+
+  /* 拡大表示 */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 22, 28, .9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px;
+    z-index: 10;
+    cursor: zoom-out;
+  }
+  .lightbox img { max-width: 100%; max-height: calc(100% - 72px); background: #fff; border-radius: 8px; }
+  .lightbox button { background: var(--card); cursor: pointer; }
+
+  /* 運営設定 */
+  .staff input {
+    font: inherit;
+    width: 100%;
+    max-width: 320px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  footer { text-align: center; padding: 0 16px 24px; font-size: 12px; }
+  footer button { background: none; padding: 4px 8px; color: var(--muted); font-weight: normal; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI画像比較・採点ゲーム</h1>
+    <p>Photoshopでお題を再現して、AIに採点してもらおう！</p>
+  </header>
+
+  <!--
+    @include の行は、python dev/build.py を実行するとそのファイルの中身に置き換わる。
+    表示する画面は js/main.js の show() で切り替える。
+  -->
+  <main>
+    <!-- 運営設定（会場PCで最初に1回だけ） -->
+    <section id="screen-staff" class="card staff hidden">
+      <h2>運営スタッフ用の設定</h2>
+      <p class="muted">このPCで最初に1回だけ、運営用の合言葉を入力してください。来場者は入力不要です。</p>
+      <form id="staff-form">
+        <input id="staff-pass" type="password" autocomplete="off" placeholder="合言葉">
+        <div class="actions" style="justify-content:flex-start">
+          <button type="submit" class="btn-primary">設定する</button>
+        </div>
+        <div id="staff-message" class="message"></div>
+      </form>
+    </section>
+    <!-- 読み込み中 -->
+    <section id="screen-boot" class="card loading">
+      <div class="spinner"></div>
+      <p>読み込み中…</p>
+    </section>
+    <!-- 読み込みエラー -->
+    <section id="screen-fatal" class="card hidden">
+      <h2>ゲームを開始できません</h2>
+      <p id="fatal-message" class="message error"></p>
+      <div class="actions"><button class="btn-secondary" onclick="location.reload()">再読み込み</button></div>
+    </section>
+    <!-- メニュー画面 -->
+    <section id="screen-menu" class="card menu hidden">
+      <button class="btn-primary" id="btn-game-start">ゲームスタート</button>
+      <button class="btn-secondary" data-go="select">絵を選ぶ</button>
+      <div class="muted">選んでいる絵：<span id="menu-selected"></span></div>
+      <button class="btn-secondary" data-popup="howto">遊び方</button>
+    </section>
+    <!-- 6.1 ゲーム開始画面（お題を選ぶ） -->
+    <section id="screen-select" class="hidden">
+      <div class="card">
+        <h2>お題をえらぼう</h2>
+        <p class="muted">Photoshopで再現したいお題をクリックしてください。AIがどれだけそっくりかを100点満点で採点します。</p>
+        <div id="topic-grid" class="topic-grid"></div>
+        <div id="select-message" class="message error"></div>
+        <div class="actions">
+          <button class="btn-secondary" data-menu>メニューに戻る</button>
+        </div>
+      </div>
+    </section>
+    <!-- 6.1 ゲーム開始画面（選んだお題と作り方） -->
+    <section id="screen-start" class="hidden">
+      <div class="card grid-2">
+        <div>
+          <div class="label">お題：<span class="topic-title"></span></div>
+          <div class="frame clickable" data-zoom>
+            <img class="topic-img" alt="お題画像" draggable="false">
+            <span class="zoom-hint">クリックで拡大</span>
+          </div>
+        </div>
+        <div>
+          <h2>あそびかた</h2>
+          <ol class="steps">
+            <li>左のお題画像をよく見る（クリックすると拡大できます）</li>
+            <li>Photoshopで、お題をできるだけそっくりに再現する</li>
+            <li>PNG形式で書き出す</li>
+            <li>この画面に戻って画像を提出する</li>
+            <li>AIが100点満点で採点してくれます！</li>
+          </ol>
+          <div class="tips">
+            <b>Photoshopでの作り方</b>
+            <ul>
+              <li>「ファイル → 新規」で <b>幅 1024 × 高さ 1024 ピクセル</b>、背景を<b>白</b>にして作成</li>
+              <li>完成したら「ファイル → 書き出し → PNGとしてクイック書き出し」</li>
+              <li>形・色・配置・細かい部分が採点されます</li>
+            </ul>
+          </div>
+          <div class="actions" style="justify-content:flex-start">
+            <button class="btn-primary" data-go="submit">画像を提出する</button>
+            <button class="btn-secondary" data-menu>メニューに戻る</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- 6.2 画像提出画面 -->
+    <section id="screen-submit" class="hidden">
+      <div class="card">
+        <h2>画像を提出する</h2>
+        <div class="grid-2">
+          <div>
+            <div class="label">お題：<span class="topic-title"></span></div>
+            <div class="frame clickable" data-zoom>
+              <img class="topic-img" alt="お題画像" draggable="false">
+              <span class="zoom-hint">クリックで拡大</span>
+            </div>
+          </div>
+          <div>
+            <div class="label">あなたの作品</div>
+            <label id="dropzone" class="dropzone" for="file-input">
+              <span class="big">＋</span>
+              <span>ここをクリックしてPNG画像を選ぶ<br>（ドラッグ＆ドロップもできます）</span>
+              <span style="font-size:12px">PNG形式・5MBまで</span>
+            </label>
+            <div id="preview-wrap" class="frame hidden">
+              <img id="preview-img" alt="提出画像のプレビュー">
+            </div>
+            <input id="file-input" type="file" accept="image/png,.png" class="hidden">
+            <div id="file-message" class="message"></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn-secondary hidden" id="btn-change">画像を選び直す</button>
+          <button class="btn-primary" id="btn-score" disabled>AIに採点してもらう</button>
+        </div>
+        <p class="muted" style="text-align:center;font-size:12px;margin:12px 0 0">
+          <button class="btn-secondary" style="padding:4px 14px;font-size:12px" data-go="start">あそびかたに戻る</button>
+          <button class="btn-secondary" style="padding:4px 14px;font-size:12px" data-menu>メニューに戻る</button>
+        </p>
+      </div>
+    </section>
+    <!-- 採点中 -->
+    <section id="screen-loading" class="card loading hidden">
+      <div class="spinner"></div>
+      <h2 id="loading-text">AIが採点中です…</h2>
+      <p class="muted">ふつうは10〜30秒ほどかかります（<span id="loading-sec">0</span>秒経過）</p>
+    </section>
+    <!-- 採点エラー -->
+    <section id="screen-error" class="card hidden" style="text-align:center">
+      <h2>うまく採点できませんでした</h2>
+      <p id="error-message" class="message error"></p>
+      <div class="actions">
+        <button class="btn-primary" id="btn-retry">もう一度採点する</button>
+        <button class="btn-secondary" data-go="submit">画像を選び直す</button>
+        <button class="btn-secondary" data-menu>メニューに戻る</button>
+      </div>
+    </section>
+    <!-- 6.3 採点結果画面 -->
+    <section id="screen-result" class="hidden">
+      <div class="card total">
+        <div><span id="total-score" class="score">0</span><span class="unit">点</span></div>
+        <div id="rank" class="rank"></div>
+        <div class="bars" id="bars"></div>
+      </div>
+      <div class="card grid-2">
+        <div>
+          <div class="comment good"><h3>良かった点</h3><p id="good-points"></p></div>
+          <div class="comment improve"><h3>改善点</h3><p id="improvements"></p></div>
+          <div class="comment overall"><h3>総合評価</h3><p id="overall"></p></div>
+        </div>
+        <div>
+          <div class="thumbs">
+            <div><div class="label">お題</div><div class="frame"><img class="topic-img" alt="お題画像" draggable="false"></div></div>
+            <div><div class="label">あなたの作品</div><div class="frame"><img id="result-img" alt="提出画像"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-again">再挑戦する</button>
+        <button class="btn-secondary" data-menu="reset">メニューに戻る</button>
+      </div>
+    </section>
+  </main>
+
+  <footer><button id="btn-staff" title="運営スタッフ用">運営</button></footer>
+
+  <!-- ゲームスタートのポップアップ（絵を選んでいないとき） -->
+  <div id="popup-start" class="popup hidden">
+    <div class="popup-box">
+      <div class="actions">
+        <button class="btn-primary" id="btn-popup-select">絵を選ぶ</button>
+        <button class="btn-primary" id="btn-random">ランダムで始める</button>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary" data-menu>メニューに戻る</button>
+      </div>
+    </div>
+  </div>
+  <!-- 遊び方のポップアップ -->
+  <div id="popup-howto" class="popup hidden">
+    <div class="popup-box">
+      <h2>遊び方</h2>
+      <!-- 遊び方の内容はここに書く -->
+      <div class="actions">
+        <button class="btn-secondary" data-menu>メニューに戻る</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- お題の拡大表示（どこをクリックしても閉じて、拡大前の画面に戻る） -->
+  <div id="lightbox" class="lightbox hidden">
+    <img id="lightbox-img" alt="お題画像（拡大）">
+    <button class="btn-secondary">戻る</button>
+  </div>
+
+  <script>
+  // ===== 設定 =====
+  const SIZE = 1024;                       // お題・提出画像をこのサイズに揃える
+  const MAX_BYTES = 5 * 1024 * 1024;       // アップロード上限 5MB
+  const COPY_THRESHOLD = 2.0;              // お題との平均差がこれ未満なら「お題そのまま」とみなす（0〜255）
+  const PASS_KEY = 'aiScoreGame.passphrase';
+  const REQUIRE_PASSPHRASE = false;        // 運営用の合言葉を使うか（Code.gs の同名の設定と合わせる）
+  // 配点を変えるときは Code.gs の CRITERIA と合わせる
+  const CATEGORIES = [
+    { key: 'shape', label: '形の再現度', max: 40 },
+    { key: 'color', label: '色の再現度', max: 30 },
+    { key: 'composition', label: '配置・構図', max: 20 },
+    { key: 'detail', label: '細部の再現度', max: 10 },
+  ];
+
+  const state = {
+    passphrase: '',
+    topics: [],            // 選べるお題の一覧
+    selectedTopic: null,   // 「絵を選ぶ」で選んだお題（未選択なら null）
+    topicId: '',           // プレイ中のお題のファイルID
+    topicCache: new Map(), // 一度読み込んだお題画像（ファイルID → data URL）
+    topicCanvas: null,     // 1024x1024 に揃えたお題画像
+    submission: null,      // 送信する PNG の data URL
+    busy: false,
+  };
+
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  // ===== 画面切り替え =====
+  const SCREENS = ['staff', 'boot', 'fatal', 'menu', 'select', 'start', 'submit', 'loading', 'error', 'result'];
+  function show(name) {
+    if (name === 'menu') {
+      $('#menu-selected').textContent = state.selectedTopic ? state.selectedTopic.title : 'なし';
+    }
+    SCREENS.forEach((s) => $('#screen-' + s).classList.toggle('hidden', s !== name));
+    window.scrollTo(0, 0);
+  }
+  $$('[data-go]').forEach((el) => el.addEventListener('click', () => show(el.dataset.go)));
+
+  // ===== ポップアップ =====
+  function openPopup(name) {
+    $('#popup-' + name).classList.remove('hidden');
+  }
+  function closePopups() {
+    $$('.popup, #lightbox').forEach((el) => el.classList.add('hidden'));
+  }
+  $$('[data-popup]').forEach((el) => el.addEventListener('click', () => openPopup(el.dataset.popup)));
+
+  // メニューに戻る（data-menu="reset" なら選んだ絵も未選択に戻す）
+  $$('[data-menu]').forEach((el) => el.addEventListener('click', () => {
+    if (el.dataset.menu === 'reset') state.selectedTopic = null;
+    closePopups();
+    show('menu');
+  }));
+
+  // ===== サーバー呼び出し（google.script.run を Promise 化） =====
+  function callServer(fn, ...args) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)[fn](...args);
+    });
+  }
+
+  // ===== 合言葉の保存 =====
+  function loadPass() {
+    try { return localStorage.getItem(PASS_KEY) || ''; } catch (e) { return state.passphrase; }
+  }
+  function savePass(value) {
+    state.passphrase = value;
+    try {
+      if (value) localStorage.setItem(PASS_KEY, value); else localStorage.removeItem(PASS_KEY);
+    } catch (e) { /* 保存できない環境ではこのタブの間だけ有効 */ }
+  }
+
+  $('#staff-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const value = $('#staff-pass').value.trim();
+    const msg = $('#staff-message');
+    if (!value) return;
+    msg.className = 'message';
+    msg.textContent = '確認中…';
+    try {
+      const res = await callServer('verifyPassphrase', value);
+      if (!res.ok) {
+        msg.className = 'message error';
+        msg.textContent = '合言葉が違います。';
+        return;
+      }
+      savePass(value);
+      $('#staff-pass').value = '';
+      msg.textContent = '';
+      boot();
+    } catch (err) {
+      msg.className = 'message error';
+      msg.textContent = '通信エラー：' + err.message;
+    }
+  });
+
+  $('#btn-staff').classList.toggle('hidden', !REQUIRE_PASSPHRASE);
+  $('#btn-staff').addEventListener('click', () => {
+    if (!confirm('運営スタッフ用の設定を開きますか？（保存されている合言葉は消去されます）')) return;
+    savePass('');
+    show('staff');
+  });
+
+  // ===== 起動 =====
+  async function boot() {
+    state.passphrase = REQUIRE_PASSPHRASE ? loadPass() : '';
+    if (REQUIRE_PASSPHRASE && !state.passphrase) { show('staff'); return; }
+    show('boot');
+    try {
+      const info = await callServer('getGameInfo', state.passphrase);
+      if (!info.ok) {
+        if (info.code === 'AUTH') { savePass(''); show('staff'); return; }
+        throw new Error(info.message);
+      }
+      state.topics = info.topics;
+      renderTopicList(info.topics);
+      show('menu');
+    } catch (err) {
+      $('#fatal-message').textContent = err.message;
+      show('fatal');
+    }
+  }
+
+  // ===== メニュー =====
+  $('#btn-game-start').addEventListener('click', () => {
+    if (state.selectedTopic) startTopic(state.selectedTopic);
+    else openPopup('start');
+  });
+  $('#btn-popup-select').addEventListener('click', () => {
+    closePopups();
+    show('select');
+  });
+  $('#btn-random').addEventListener('click', () => {
+    closePopups();
+    startTopic(state.topics[Math.floor(Math.random() * state.topics.length)]);
+  });
+
+  // ===== お題選択（絵を押したらメニューに戻る） =====
+  function renderTopicList(topics) {
+    const grid = $('#topic-grid');
+    grid.innerHTML = '';
+    topics.forEach((topic) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'topic-card';
+      card.innerHTML = '<div class="thumb"></div><div class="title"></div>';
+      if (topic.thumbnailUrl) {
+        const img = document.createElement('img');
+        img.src = topic.thumbnailUrl;
+        img.alt = '';
+        img.draggable = false;
+        card.querySelector('.thumb').appendChild(img);
+      } else {
+        card.querySelector('.thumb').textContent = '？';
+      }
+      card.querySelector('.title').textContent = topic.title;
+      card.addEventListener('click', () => {
+        state.selectedTopic = topic;
+        show('menu');
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  /** お題の画像を読み込んで、②（お題と作り方）の画面を表示する */
+  async function startTopic(topic) {
+    $('#select-message').textContent = '';
+    show('boot');
+    try {
+      let dataUrl = state.topicCache.get(topic.id);
+      if (!dataUrl) {
+        const res = await callServer('getTopic', state.passphrase, topic.id);
+        if (!res.ok) {
+          if (res.code === 'AUTH') { savePass(''); show('staff'); return; }
+          throw new Error(res.message);
+        }
+        dataUrl = res.dataUrl;
+        state.topicCache.set(topic.id, dataUrl);
+      }
+      state.topicId = topic.id;
+      state.topicCanvas = toSquareCanvas(await loadImage(dataUrl));
+      $$('.topic-title').forEach((el) => { el.textContent = topic.title; });
+      $$('.topic-img').forEach((el) => { el.src = dataUrl; });
+      $('#lightbox-img').src = dataUrl;
+      resetSubmission();
+      setFileMessage('');
+      show('start');
+    } catch (err) {
+      $('#select-message').textContent = err.message || 'お題を読み込めませんでした。';
+      show('select');
+    }
+  }
+
+  // ===== お題の拡大表示・保存しにくくする =====
+  $$('[data-zoom]').forEach((el) => el.addEventListener('click', () => $('#lightbox').classList.remove('hidden')));
+  $('#lightbox').addEventListener('click', () => $('#lightbox').classList.add('hidden'));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#lightbox').classList.add('hidden'); });
+  document.addEventListener('contextmenu', (e) => { if (e.target.closest('.topic-img, #lightbox')) e.preventDefault(); });
+
+  // ===== 画像処理 =====
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('画像を読み込めませんでした。'));
+      img.src = src;
+    });
+  }
+
+  /** 白背景の 1024x1024 キャンバスに、縦横比を保って中央に配置する（透明部分は白になる） */
+  function toSquareCanvas(img) {
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, SIZE, SIZE);
+    const scale = Math.min(SIZE / img.naturalWidth, SIZE / img.naturalHeight);
+    const w = img.naturalWidth * scale;
+    const h = img.naturalHeight * scale;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, (SIZE - w) / 2, (SIZE - h) / 2, w, h);
+    return canvas;
+  }
+
+  /** 2枚のキャンバスを 64x64 に縮小し、RGB の平均絶対差（0〜255）を返す */
+  function meanDifference(a, b) {
+    const n = 64;
+    const read = (src) => {
+      const c = document.createElement('canvas');
+      c.width = n;
+      c.height = n;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(src, 0, 0, n, n);
+      return ctx.getImageData(0, 0, n, n).data;
+    };
+    const da = read(a);
+    const db = read(b);
+    let sum = 0;
+    for (let i = 0; i < da.length; i += 4) {
+      sum += Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) + Math.abs(da[i + 2] - db[i + 2]);
+    }
+    return sum / (n * n * 3);
+  }
+
+  async function isPng(file) {
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    return sig.every((v, i) => head[i] === v);
+  }
+
+  // ===== ファイル選択 =====
+  const fileInput = $('#file-input');
+  const dropzone = $('#dropzone');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = '';
+  });
+  ['dragenter', 'dragover'].forEach((type) => dropzone.addEventListener(type, (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  }));
+  ['dragleave', 'drop'].forEach((type) => dropzone.addEventListener(type, (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+  }));
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  $('#btn-change').addEventListener('click', () => fileInput.click());
+
+  function setFileMessage(text, type) {
+    const el = $('#file-message');
+    el.className = 'message' + (type ? ' ' + type : '');
+    el.textContent = text;
+  }
+
+  function resetSubmission() {
+    state.submission = null;
+    $('#btn-score').disabled = true;
+    $('#preview-wrap').classList.add('hidden');
+    dropzone.classList.remove('hidden');
+    $('#btn-change').classList.add('hidden');
+  }
+
+  async function handleFile(file) {
+    resetSubmission();
+    setFileMessage('');
+    if (!(await isPng(file))) {
+      setFileMessage('PNG形式の画像を選んでください。（JPEGやPSDは提出できません）', 'error');
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setFileMessage('ファイルサイズが大きすぎます（' + (file.size / 1024 / 1024).toFixed(1) + 'MB）。5MB以下にしてください。', 'error');
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    let img;
+    try {
+      img = await loadImage(url);
+    } catch (err) {
+      setFileMessage(err.message, 'error');
+      return;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+
+    const canvas = toSquareCanvas(img);
+    if (state.topicCanvas && meanDifference(canvas, state.topicCanvas) < COPY_THRESHOLD) {
+      setFileMessage('お題画像とまったく同じ画像は提出できません。自分で作った作品を選んでね！', 'error');
+      return;
+    }
+
+    state.submission = canvas.toDataURL('image/png');
+    $('#preview-img').src = state.submission;
+    $('#preview-wrap').classList.remove('hidden');
+    dropzone.classList.add('hidden');
+    $('#btn-change').classList.remove('hidden');
+    $('#btn-score').disabled = false;
+
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    if (w !== h) {
+      setFileMessage('正方形ではない画像（' + w + '×' + h + '）のため、余白を白で追加しました。', 'warn');
+    } else if (w !== SIZE) {
+      setFileMessage('画像を ' + SIZE + '×' + SIZE + ' に拡大・縮小しました。', 'warn');
+    } else {
+      setFileMessage('準備OK！「AIに採点してもらう」を押してください。');
+    }
+  }
+
+  // ===== 採点 =====
+  const LOADING_TEXTS = ['AIが採点中です…', '形をくらべています…', '色をチェックしています…', '細かいところを見ています…', 'コメントを考えています…'];
+  let loadingTimer = null;
+
+  function startLoading() {
+    const started = Date.now();
+    $('#loading-sec').textContent = '0';
+    $('#loading-text').textContent = LOADING_TEXTS[0];
+    loadingTimer = setInterval(() => {
+      const sec = Math.floor((Date.now() - started) / 1000);
+      $('#loading-sec').textContent = sec;
+      $('#loading-text').textContent = LOADING_TEXTS[Math.floor(sec / 5) % LOADING_TEXTS.length];
+    }, 1000);
+    show('loading');
+  }
+  function stopLoading() {
+    clearInterval(loadingTimer);
+    loadingTimer = null;
+  }
+
+  async function score() {
+    if (!state.submission || state.busy) return;
+    state.busy = true;
+    startLoading();
+    try {
+      const res = await callServer('scoreImage', state.passphrase, state.topicId, state.submission);
+      stopLoading();
+      if (res.ok) {
+        renderResult(res.result);
+      } else if (res.code === 'AUTH') {
+        savePass('');
+        show('staff');
+      } else {
+        showError(res.message, res.code !== 'LIMIT');
+      }
+    } catch (err) {
+      stopLoading();
+      showError('通信エラーが発生しました。インターネット接続を確認して、もう一度お試しください。', true);
+    } finally {
+      state.busy = false;
+    }
+  }
+
+  function showError(message, retryable) {
+    $('#error-message').textContent = message;
+    $('#btn-retry').classList.toggle('hidden', !retryable);
+    show('error');
+  }
+
+  $('#btn-score').addEventListener('click', score);
+  $('#btn-retry').addEventListener('click', score);
+  $('#btn-again').addEventListener('click', () => {
+    resetSubmission();
+    setFileMessage('');
+    show('submit');
+  });
+
+  // ===== 結果表示 =====
+  function rankFor(total) {
+    if (total >= 90) return 'すばらしい！ほぼ完ぺきな再現です 🏆';
+    if (total >= 75) return 'とても上手！かなりそっくりです ✨';
+    if (total >= 60) return 'いい感じ！特徴をつかめています 👍';
+    if (total >= 40) return 'おしい！あと一歩です 💪';
+    return 'チャレンジありがとう！もう一度挑戦してみよう 🎨';
+  }
+
+  function renderResult(result) {
+    $('#result-img').src = state.submission;
+    $('#good-points').textContent = result.goodPoints;
+    $('#improvements').textContent = result.improvements;
+    $('#overall').textContent = result.overall;
+    $('#rank').textContent = rankFor(result.total);
+
+    const bars = $('#bars');
+    bars.innerHTML = '';
+    CATEGORIES.forEach((c) => {
+      const value = result.scores[c.key];
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML = '<div></div><div class="bar"><span></span></div><div class="pts"></div>';
+      row.children[0].textContent = c.label;
+      row.children[2].textContent = value + ' / ' + c.max;
+      bars.appendChild(row);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        row.querySelector('.bar > span').style.width = (value / c.max * 100) + '%';
+      }));
+    });
+
+    show('result');
+    countUp($('#total-score'), result.total);
+  }
+
+  function countUp(el, target) {
+    const duration = 1200;
+    const started = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, Math.max(0, (now - started) / duration));
+      el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  boot();
+  </script>
+</body>
+</html>

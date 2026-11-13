@@ -1,0 +1,30 @@
+<!-- 自分でお題を作る画面（保存したお題は、運営が承認すると「みんなの絵」に出る） -->
+<section id="screen-create" class="hidden">
+  <div class="card">
+    <h2><ruby>自分<rt>じぶん</rt></ruby>でおだいを<ruby>作<rt>つく</rt></ruby>ろう</h2>
+    <div class="grid-2">
+      <div>
+        <label class="label" for="create-title">おだいの<ruby>名前<rt>なまえ</rt></ruby></label>
+        <input id="create-title" class="text-input" type="text" maxlength="20" autocomplete="off" placeholder="20もじまで">
+      </div>
+      <div>
+        <div class="label">おだいにする<ruby>絵<rt>え</rt></ruby></div>
+        <label id="create-dropzone" class="dropzone" for="create-file">
+          <span class="big">＋</span>
+          <span>ここをクリックして、<ruby>PNG<rt>ピーエヌジー</rt></ruby>の<ruby>絵<rt>え</rt></ruby>をえらぼう<br>（ひっぱって<ruby>入<rt>い</rt></ruby>れてもいいよ）</span>
+          <span style="font-size:12px"><ruby>PNG<rt>ピーエヌジー</rt></ruby>・5MBまで</span>
+        </label>
+        <div id="create-preview-wrap" class="frame hidden">
+          <img id="create-preview-img" alt="作ったお題のプレビュー">
+        </div>
+        <input id="create-file" type="file" accept="image/png,.png" class="hidden">
+        <div id="create-message" class="message"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-secondary hidden" id="btn-create-change"><ruby>絵<rt>え</rt></ruby>をえらびなおす</button>
+      <button class="btn-primary" id="btn-create-save" disabled>ほぞんする</button>
+      <button class="btn-secondary" data-menu>メニューにもどる</button>
+    </div>
+  </div>
+</section>

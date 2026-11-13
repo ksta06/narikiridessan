@@ -1,0 +1,36 @@
+<!-- 6.2 画像提出画面 -->
+<section id="screen-submit" class="hidden">
+  <div class="card">
+    <h2><ruby>絵<rt>え</rt></ruby>を<ruby>出<rt>だ</rt></ruby>そう</h2>
+    <div class="grid-2">
+      <div>
+        <div class="label">おだい：<span class="topic-title"></span></div>
+        <div class="frame clickable" data-zoom>
+          <img class="topic-img" alt="お題画像" draggable="false">
+          <span class="zoom-hint">クリックで<ruby>大<rt>おお</rt></ruby>きくなるよ</span>
+        </div>
+      </div>
+      <div>
+        <div class="label">あなたの<ruby>絵<rt>え</rt></ruby></div>
+        <label id="dropzone" class="dropzone" for="file-input">
+          <span class="big">＋</span>
+          <span>ここをクリックして、<ruby>PNG<rt>ピーエヌジー</rt></ruby>の<ruby>絵<rt>え</rt></ruby>をえらぼう<br>（ひっぱって<ruby>入<rt>い</rt></ruby>れてもいいよ）</span>
+          <span style="font-size:12px"><ruby>PNG<rt>ピーエヌジー</rt></ruby>・5MBまで</span>
+        </label>
+        <div id="preview-wrap" class="frame hidden">
+          <img id="preview-img" alt="提出画像のプレビュー">
+        </div>
+        <input id="file-input" type="file" accept="image/png,.png" class="hidden">
+        <div id="file-message" class="message"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-secondary hidden" id="btn-change"><ruby>絵<rt>え</rt></ruby>をえらびなおす</button>
+      <button class="btn-primary" id="btn-score" disabled><ruby>AI<rt>エーアイ</rt></ruby>に<ruby>点<rt>てん</rt></ruby>をつけてもらう</button>
+    </div>
+    <p class="muted" style="text-align:center;font-size:12px;margin:12px 0 0">
+      <button class="btn-secondary" style="padding:4px 14px;font-size:12px" data-go="start">あそびかたにもどる</button>
+      <button class="btn-secondary" style="padding:4px 14px;font-size:12px" data-menu>メニューにもどる</button>
+    </p>
+  </div>
+</section>

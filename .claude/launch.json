@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["dev/preview.py"],
+      "port": 8765
+    }
+  ]
+}

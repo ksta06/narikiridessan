@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>AI画像比較・採点ゲーム</title>
+  <!-- @include css/style.css -->
+</head>
+<body>
+  <header>
+    <h1><img class="title-icon" src="https://lh3.googleusercontent.com/d/1BKHVxV_y_z5_xr40MRSBNJFg0azyWFDE" alt="AI画像比較・採点ゲーム" draggable="false"></h1>
+    <p><ruby>Photoshop<rt>フォトショップ</rt></ruby>でおだいと<ruby>同<rt>おな</rt></ruby>じ<ruby>絵<rt>え</rt></ruby>をかいて、<ruby>AI<rt>エーアイ</rt></ruby>に<ruby>点<rt>てん</rt></ruby>をつけてもらおう！</p>
+  </header>
+
+  <!--
+    @include の行は、python dev/build.py を実行するとそのファイルの中身に置き換わる。
+    表示する画面は js/main.js の show() で切り替える。
+  -->
+  <main>
+    <!-- @include html/screen_staff.html    合言葉の入力（運営用） -->
+    <!-- @include html/screen_boot.html     起動中 -->
+    <!-- @include html/screen_fatal.html    起動できないとき -->
+    <!-- @include html/screen_menu.html     メニュー画面 -->
+    <!-- @include html/screen_difficulty.html  難易度の選択画面 -->
+    <!-- @include html/screen_select.html   6.1 ゲーム開始画面（お題を選ぶ） -->
+    <!-- @include html/screen_start.html    6.1 ゲーム開始画面（選んだお題と作り方） -->
+    <!-- @include html/screen_submit.html   6.2 画像提出画面 -->
+    <!-- @include html/screen_loading.html  採点中 -->
+    <!-- @include html/screen_error.html    採点エラー -->
+    <!-- @include html/screen_result.html   6.3 採点結果画面 -->
+    <!-- @include html/screen_create.html   自分でお題を作る画面 -->
+    <!-- @include html/screen_created.html  お題を保存したあと -->
+  </main>
+
+  <footer><button id="btn-staff" title="運営スタッフ用">運営</button></footer>
+
+  <!-- @include html/popup_start.html  ゲームスタートのポップアップ -->
+  <!-- @include html/popup_mode.html   モード選択のポップアップ -->
+  <!-- @include html/popup_howto.html  遊び方のポップアップ -->
+
+  <!-- お題の拡大表示（どこをクリックしても閉じて、拡大前の画面に戻る） -->
+  <div id="lightbox" class="lightbox hidden">
+    <img id="lightbox-img" alt="お題画像（拡大）">
+    <button class="btn-secondary">もどる</button>
+  </div>
+
+  <!-- @include js/main.js -->
+</body>
+</html>
